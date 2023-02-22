@@ -1,0 +1,27 @@
+[submodule "edge/third_party/imgui"]
+	path = edge/third_party/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "edge/third_party/lua"]
+	path = edge/third_party/lua
+	url = https://github.com/lua/lua
+[submodule "edge/third_party/luacheck"]
+	path = edge/third_party/luacheck
+	url = https://github.com/lunarmodules/luacheck
+[submodule "edge/third_party/luafilesystem"]
+	path = edge/third_party/luafilesystem
+	url = https://github.com/lunarmodules/luafilesystem
+[submodule "edge/third_party/SDL"]
+	path = edge/third_party/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "edge/third_party/SDL_image"]
+	path = edge/third_party/SDL_image
+	url = https://github.com/libsdl-org/SDL_image/
+[submodule "edge/third_party/SDL_ttf"]
+	path = edge/third_party/SDL_ttf
+	url = https://github.com/libsdl-org/SDL_ttf
+[submodule "edge/third_party/sol2"]
+	path = edge/third_party/sol2
+	url = https://github.com/ThePhD/sol2
+[submodule "edge/third_party/SDL_mixer"]
+	path = edge/third_party/SDL_mixer
+	url = https://github.com/libsdl-org/SDL_mixer
