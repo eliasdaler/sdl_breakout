@@ -22,9 +22,9 @@ M.Texts = {
     {"2023, Elias Daler", 196, textNormalColor},
   },
   [M.State.GameOver] = {
-    {"panic:game over", 18, textRedColor},
+    {"Game over", 18, textRedColor},
     {"Press Z to", 50, textNormalColor},
-    {"recover", 66, textGreenColor},
+    {"restart", 66, textGreenColor},
   },
   [M.State.Win] = {
     {"YOU WON!", 18, textGreenColor},
@@ -36,7 +36,7 @@ M.Texts = {
 function M.initTexts(font)
   for _, ts in pairs(M.Texts) do
     for _, t in ipairs(ts) do
-      t[1] = edge.DrawableString.new(font, t[1])
+      t[1] = edge.newDrawableString(font, t[1])
     end
   end
 end

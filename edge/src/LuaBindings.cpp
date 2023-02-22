@@ -1,9 +1,8 @@
-#include "edge/LuaBindings.h"
+#include "LuaBindings.h"
 
 #include <sol/sol.hpp>
 
-#include "edge/Globals.h"
-#include "edge/LuaImGui.h"
+#include "Globals.h"
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -73,6 +72,13 @@ struct Sprite {
         setTextureRect(0, 0, texture->width, texture->height);
     }
 
+    void draw(double x, double y) const
+    {
+        assert(texture);
+        SDL_Rect renderQuad = {(int)x, (int)y, textureRect.w, textureRect.h};
+        SDL_RenderCopy(gRenderer, texture->texture, &textureRect, &renderQuad);
+    }
+
     void setTextureRect(int x, int y, int w, int h) { textureRect = {x, y, w, h}; }
 
     Texture* texture = nullptr;
@@ -82,11 +88,16 @@ struct Sprite {
 void registerSprite(sol::state& lua, sol::table& edge)
 {
     // sprite
-    auto su = edge.new_usertype<Sprite>("Sprite", sol::constructors<Sprite(Texture*)>());
+    auto su = edge.new_usertype<Sprite>("Sprite");
     su["setTextureRect"] = &Sprite::setTextureRect;
     su["getTextureRect"] = [](Sprite& sprite) {
         auto st = sprite.textureRect;
         return std::make_tuple(st.x, st.y, st.w, st.h);
+    };
+    su["draw"] = &Sprite::draw;
+
+    edge["newSprite"] = [&lua](Texture* texture) {
+        return sol::object(lua, sol::in_place_type<Sprite>, texture);
     };
 }
 
@@ -129,12 +140,25 @@ void registerFont(sol::state& lua, sol::table& edge)
 /////////////////////
 
 struct DrawableString {
+    DrawableString(SDL_Texture* texture, int width, int height) :
+        texture(texture), width(width), height(height)
+    {}
+
     // _gc
     void destroy()
     {
         assert(texture);
         SDL_DestroyTexture(texture);
         texture = nullptr;
+    }
+
+    void draw(int x, int y, int r, int g, int b) const
+    {
+        assert(texture);
+
+        SDL_SetTextureColorMod(texture, r, g, b);
+        SDL_Rect rect{x, y, width, height};
+        SDL_RenderCopy(gRenderer, texture, NULL, &rect);
     }
 
     SDL_Texture* texture = nullptr;
@@ -145,24 +169,24 @@ struct DrawableString {
 void registerDrawableString(sol::state& lua, sol::table& edge)
 {
     // clang-format off
-    auto dsu = edge.new_usertype<DrawableString>("DrawableString",
-            sol::factories([&lua](const Font& font, const char* text) {
-                const SDL_Color white = {255, 255, 255, 255};
-
-                auto surface = TTF_RenderUTF8_Solid(font.font, text, white);
-                assert(surface);
-                auto texture = SDL_CreateTextureFromSurface(gRenderer, surface);
-                assert(texture);
-
-                int width = surface->w;
-                int height = surface->h;
-                SDL_FreeSurface(surface);
-
-                return sol::object(lua,
-                        sol::in_place_type<DrawableString>, texture, width, height);
-            }));
-    // clang-format on
+    auto dsu = edge.new_usertype<DrawableString>("DrawableString");
     dsu[sol::meta_function::garbage_collect] = &DrawableString::destroy;
+    dsu["draw"] = &DrawableString::draw;
+
+    edge["newDrawableString"] = [&lua](const Font& font, const char* text) {
+        const SDL_Color white = {255, 255, 255, 255};
+
+        auto surface = TTF_RenderUTF8_Solid(font.font, text, white);
+        assert(surface);
+        auto texture = SDL_CreateTextureFromSurface(gRenderer, surface);
+        assert(texture);
+
+        int width = surface->w;
+        int height = surface->h;
+        SDL_FreeSurface(surface);
+
+        return sol::object(lua, sol::in_place_type<DrawableString>, texture, width, height);
+    };
 }
 
 /////////////////////
@@ -170,11 +194,7 @@ void registerDrawableString(sol::state& lua, sol::table& edge)
 /////////////////////
 
 struct Sound {
-    void play()
-    {
-        assert(sound);
-        Mix_PlayChannel(-1, sound, 0);
-    }
+    Sound(Mix_Chunk* s) : sound(s) {}
 
     // _gc
     void destroy()
@@ -182,6 +202,11 @@ struct Sound {
         assert(sound);
         Mix_FreeChunk(sound);
         sound = nullptr;
+    }
+
+    void play() const {
+        assert(sound);
+        Mix_PlayChannel(-1, sound, 0);
     }
 
     Mix_Chunk* sound = nullptr;
@@ -200,8 +225,8 @@ std::tuple<sol::object, const char*> loadSound(const char* path, sol::this_state
 void registerSound(sol::state& lua, sol::table& edge)
 {
     auto su = edge.new_usertype<Sound>("Sound");
-    su["play"] = &Sound::play;
     su[sol::meta_function::garbage_collect] = &Sound::destroy;
+    su["play"] = &Sound::play;
 
     edge["loadSound"] = loadSound;
 }
@@ -211,17 +236,7 @@ void registerSound(sol::state& lua, sol::table& edge)
 /////////////////////
 
 struct Music {
-    void play()
-    {
-        assert(music);
-        Mix_PlayMusic(music, -1);
-    }
-
-    void stop()
-    {
-        assert(music);
-        Mix_HaltMusic(); // TODO: halt specific channel
-    }
+    Music(Mix_Music* m) : music(m) {}
 
     // _gc
     void destroy()
@@ -229,6 +244,16 @@ struct Music {
         assert(music);
         Mix_FreeMusic(music);
         music = nullptr;
+    }
+
+    void play() const {
+        assert(music);
+        Mix_PlayMusic(music, -1);
+    }
+
+    void stop() const {
+        assert(music);
+        Mix_HaltMusic(); // TODO: halt specific channel
     }
 
     Mix_Music* music = nullptr;
@@ -247,9 +272,9 @@ std::tuple<sol::object, const char*> loadMusic(const char* path, sol::this_state
 void registerMusic(sol::state& lua, sol::table& edge)
 {
     auto mu = edge.new_usertype<Music>("Music");
+    mu[sol::meta_function::garbage_collect] = &Music::destroy;
     mu["play"] = &Music::play;
     mu["stop"] = &Music::stop;
-    mu[sol::meta_function::garbage_collect] = &Music::destroy;
 
     edge["loadMusic"] = loadMusic;
 }
@@ -262,19 +287,6 @@ bool isKeyPressed(int scancode)
 {
     const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
     return currentKeyStates[scancode];
-}
-
-void drawSprite(const Sprite& s, double x, double y)
-{
-    SDL_Rect renderQuad = {(int)x, (int)y, s.textureRect.w, s.textureRect.h};
-    SDL_RenderCopy(gRenderer, s.texture->texture, &s.textureRect, &renderQuad);
-}
-
-void drawString(const DrawableString& str, int x, int y, int r, int g, int b)
-{
-    SDL_SetTextureColorMod(str.texture, r, g, b);
-    SDL_Rect rect{x, y, str.width, str.height};
-    SDL_RenderCopy(gRenderer, str.texture, NULL, &rect);
 }
 
 void drawRect(int x, int y, int w, int h, int r, int g, int b, int a)
@@ -309,9 +321,7 @@ namespace luab
         edge["KEY_Z"] = SDL_SCANCODE_Z;
 
         // graphics
-        edge["drawString"] = drawString;
         edge["drawRect"] = drawRect;
-        edge["drawSprite"] = drawSprite;
 
         // usertypes
         registerTexture(lua, edge);
@@ -321,8 +331,6 @@ namespace luab
 
         registerSound(lua, edge);
         registerMusic(lua, edge);
-
-        registerImGuiFunctions(lua);
     }
 } // end of namespace luab
 } // end of namespace edge

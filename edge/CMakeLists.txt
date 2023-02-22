@@ -3,9 +3,14 @@ add_subdirectory(third_party)
 add_library(edge
   src/Game.cpp
   src/LuaBindings.cpp
-  src/LuaImGui.cpp
   src/Globals.cpp
 )
+
+if (BUILD_SHARED_LIBS)
+  set_target_properties(edge PROPERTIES
+    INSTALL_RPATH $ORIGIN
+  )
+endif()
 
 add_library(edge::edge ALIAS edge)
 
@@ -14,7 +19,6 @@ target_include_directories(edge PUBLIC include)
 target_link_libraries(edge PUBLIC
   lua::lua
   sol2::sol2
-  imgui::imgui
 )
 
 target_compile_definitions(edge PUBLIC SOL_ALL_SAFETIES_ON)
@@ -38,5 +42,3 @@ endif()
 target_add_extra_warnings(edge)
 # strip debug symbols
 # set_target_properties(edge PROPERTIES LINK_FLAGS_RELEASE -s)
-
-include(Install.cmake)

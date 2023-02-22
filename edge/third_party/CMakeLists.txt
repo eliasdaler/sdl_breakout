@@ -18,10 +18,6 @@ if (${BUILD_LUA_AS_CPP})
   )
 endif()
 
-if (WIN32)
-  target_compile_definitions(lua PRIVATE LUA_USE_WINDOWS)
-endif()
-
 target_include_directories(lua PUBLIC lua)
 if (UNIX)
   target_compile_definitions(lua PUBLIC LUA_USE_LINUX)
@@ -96,40 +92,3 @@ add_subdirectory(SDL_mixer)
 set_target_properties(SDL2_mixer PROPERTIES
   PUBLIC_HEADER ""
 )
-
-### Dear ImGui
-set(IMGUI_SOURCES
-  "imgui.cpp"
-  "imgui_draw.cpp"
-  "imgui_tables.cpp"
-  "imgui_widgets.cpp"
-  "imgui_demo.cpp"
-  # C++ additions
-  "misc/cpp/imgui_stdlib.cpp"
-  # SDL backend
-  "backends/imgui_impl_sdlrenderer.cpp"
-  "backends/imgui_impl_sdl2.cpp"
-)
-
-list(TRANSFORM IMGUI_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/imgui/")
-
-add_library(imgui_sdl STATIC ${IMGUI_SOURCES})
-
-target_include_directories(imgui_sdl
-  PUBLIC
-    "imgui"
-    "imgui/backends"
-)
-
-if(BUILD_SHARED_LIBS)
-  target_link_libraries(imgui_sdl
-    PUBLIC
-      SDL2::SDL2
-  )
-else()
-  target_link_libraries(imgui_sdl
-    PUBLIC
-      SDL2::SDL2-static
-  )
-endif()
-add_library(imgui::imgui ALIAS imgui_sdl)

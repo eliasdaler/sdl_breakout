@@ -55,7 +55,7 @@ function Game:initialize()
       }
       block.isBroken = false
       block.texture = blockTexture
-      block.sprite = edge.Sprite.new(block.texture)
+      block.sprite = edge.newSprite(block.texture)
       table.insert(self.blocks, block)
     end
   end
@@ -68,7 +68,7 @@ function Game:initialize()
   self.paddle = paddle
 
   -- menu
-  self.font = assert(edge.loadFont("res/JF-Dot-MPlus10.ttf", 10))
+  self.font = assert(edge.loadFont("res/font.ttf", 8))
   self:initMenu(self.font)
 
   self:showMenu(menu.State.MainMenu)
@@ -112,7 +112,6 @@ function Game:update(dt)
   if self.state == State.Playing then
     self:updateGame(dt)
   end
-  self:testImGuiWindow()
 end
 
 function Game:processInput()
@@ -184,18 +183,6 @@ function Game:updateGame(dt)
   ball.pos.y = ball.pos.y + ball.vel.y * dt
 end
 
-local testString = "hello"
-
-function Game:testImGuiWindow()
-  im.Begin("Hello")
-    im.Text(string.format("pos: (%.2f, %.2f)", self.ball.pos.x, self.ball.pos.y))
-    local ok, str = im.InputText("name", testString)
-    if ok then
-      testString = str
-    end
-    im.End()
-end
-
 function Game:draw()
   self.bg:draw()
   for _, b in ipairs(self.blocks) do
@@ -242,7 +229,7 @@ function Game:drawMenu()
     local str = t[1]
     local posY = menu.DBPos.y + t[2]
     local color = t[3]
-    edge.drawString(str, menu.DBPos.x + 8, posY - 8, table.unpack(color))
+    str:draw(menu.DBPos.x + 8, posY - 8, table.unpack(color))
   end
 end
 

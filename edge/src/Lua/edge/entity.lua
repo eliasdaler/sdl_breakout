@@ -14,7 +14,7 @@ function Entity:initialize(ps)
     texture = assert(edge.loadTexture(ps.path))
   end
   self.texture = texture
-  self.sprite = edge.Sprite.new(texture)
+  self.sprite = edge.newSprite(texture)
 end
 
 function Entity:getAABB()
@@ -23,7 +23,7 @@ function Entity:getAABB()
 end
 
 function Entity:draw()
-  edge.drawSprite(self.sprite, self.pos.x, self.pos.y)
+  self.sprite:draw(self.pos.x, self.pos.y)
 end
 
 return Entity

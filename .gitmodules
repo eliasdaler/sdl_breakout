@@ -1,15 +1,6 @@
-[submodule "edge/third_party/imgui"]
-	path = edge/third_party/imgui
-	url = https://github.com/ocornut/imgui
 [submodule "edge/third_party/lua"]
 	path = edge/third_party/lua
 	url = https://github.com/lua/lua
-[submodule "edge/third_party/luacheck"]
-	path = edge/third_party/luacheck
-	url = https://github.com/lunarmodules/luacheck
-[submodule "edge/third_party/luafilesystem"]
-	path = edge/third_party/luafilesystem
-	url = https://github.com/lunarmodules/luafilesystem
 [submodule "edge/third_party/SDL"]
 	path = edge/third_party/SDL
 	url = https://github.com/libsdl-org/SDL

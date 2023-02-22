@@ -5,14 +5,15 @@
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 
-#include <imgui_impl_sdl2.h>
-#include <imgui_impl_sdlrenderer.h>
-
 #include <filesystem>
 
-#include "edge/Globals.h"
-#include "edge/LuaBindings.h"
-#include "edge/LuaUtil.h"
+#include "Globals.h"
+#include "LuaBindings.h"
+#include "LuaUtil.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 namespace
 {
@@ -55,8 +56,18 @@ SDL_Texture* createBlankTexture(SDL_Renderer* renderer, int width, int height)
 
 namespace edge
 {
-void Game::start()
+void GameParams::validate()
 {
+    assert(screenWidth > 0);
+    assert(screenHeight > 0);
+    assert(screenScale > 0);
+}
+
+void Game::start(GameParams params)
+{
+    params.validate();
+    this->params = params;
+
     init();
     loop();
     cleanup();
@@ -91,11 +102,12 @@ void Game::init()
         std::exit(1);
     }
 
-    window = SDL_CreateWindow("Game",
+    window = SDL_CreateWindow(params.windowTitle.c_str(),
                               // pos
                               SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               // size
-                              screenWidth * screenScale, screenHeight * screenScale, 0);
+                              params.screenWidth * params.screenScale,
+                              params.screenHeight * params.screenScale, 0);
 
     if (!window) {
         printf("Couldn't create window! SDL Error: %s\n", SDL_GetError());
@@ -110,14 +122,7 @@ void Game::init()
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     gRenderer = renderer;
 
-    screenTexture = createBlankTexture(renderer, screenWidth, screenHeight);
-
-    // Setup Dear ImGui
-    {
-        ImGui::CreateContext();
-        ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-        ImGui_ImplSDLRenderer_Init(renderer);
-    }
+    screenTexture = createBlankTexture(renderer, params.screenWidth, params.screenHeight);
 
     // bg color
     SDL_SetRenderDrawColor(renderer, 100, 149, 237, SDL_ALPHA_OPAQUE);
@@ -127,7 +132,8 @@ void Game::init()
                            sol::lib::string);
         // set up package path
         const auto cwd = std::filesystem::current_path();
-        std::string ppath = cwd.string() + "/scripts/?.lua";
+        std::string ppath = cwd.string() + "/scripts/?.lua;";
+        ppath += cwd.string() + "/edge/?.lua;";
         lua["package"]["path"] = ppath;
 
         luab::registerLuaBindings(lua);
@@ -168,22 +174,14 @@ void Game::loop()
             { // event processing
                 SDL_Event event;
                 while (SDL_PollEvent(&event)) {
-                    ImGui_ImplSDL2_ProcessEvent(&event);
                     if (event.type == SDL_QUIT) {
                         is_running = false;
                     }
                 }
             }
 
-            { // update
-                ImGui_ImplSDLRenderer_NewFrame();
-                ImGui_ImplSDL2_NewFrame();
-                ImGui::NewFrame();
-
-                luautil::safeSelfCall(luaGame, "update", dt);
-
-                ImGui::Render();
-            }
+            // update
+            luautil::safeSelfCall(luaGame, "update", dt);
 
             accumulator -= dt;
         }
@@ -202,25 +200,16 @@ void Game::render()
     SDL_SetRenderTarget(renderer, nullptr);
 
     // render to screen to window
-    SDL_Rect src = {0, 0, screenWidth, screenHeight};
-    SDL_Rect dst = {0, 0, screenWidth * screenScale, screenHeight * screenScale};
+    SDL_Rect src = {0, 0, params.screenWidth, params.screenHeight};
+    SDL_Rect dst = {0, 0, params.screenWidth * params.screenScale,
+                    params.screenHeight * params.screenScale};
     SDL_RenderCopy(renderer, screenTexture, &src, &dst);
-
-    // render ImGui
-    ImGuiIO& io = ImGui::GetIO();
-    SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-    ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
     SDL_RenderPresent(renderer);
 }
 
 void Game::cleanup()
 {
-    // shut down ImGui
-    ImGui_ImplSDLRenderer_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
-
     // shut down Lua
     luaGame = sol::nil;
     lua = sol::state{}; // hack - this will kill the state and do a garbage collection

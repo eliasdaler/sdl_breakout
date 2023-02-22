@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <sol/sol.hpp>
 
 struct SDL_Window;
@@ -8,9 +10,19 @@ struct SDL_Texture;
 
 namespace edge
 {
+struct GameParams {
+    void validate();
+
+    int screenWidth = 256;
+    int screenHeight = 224;
+    int screenScale = 3;
+
+    std::string windowTitle = "Game";
+};
+
 class Game {
 public:
-    void start();
+    void start(GameParams params);
 
 private:
     void init();
@@ -26,9 +38,6 @@ private:
     sol::state lua;
     sol::table luaGame;
 
-    // TODO: put into a JSON file
-    int screenWidth = 256;
-    int screenHeight = 240;
-    int screenScale = 3;
+    GameParams params;
 };
 }
