@@ -1,5 +1,9 @@
 This is a small breakout game that I made to test a new approach of separating Lua and C++ code when working with SDL.
 
+The entire game logic is written in Lua.
+
+The small "engine" is written in C++ with SDL.
+
 ![image](https://i.ibb.co/1LdJktH/gameplay-breakout.gif)
 
 This is a port of my old test game, [Ebiten Breakout](https://github.com/eliasdaler/ebiten_breakout).
