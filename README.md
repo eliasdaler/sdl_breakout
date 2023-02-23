@@ -1,8 +1,10 @@
 This is a small breakout game that I made to test a new approach of separating Lua and C++ code when working with SDL.
 
-The entire game logic is written in Lua.
+The entire game logic is written in Lua. (start reading [here](https://github.com/eliasdaler/sdl_breakout/blob/master/games/breakout/src/scripts/game.lua))
 
-The small "engine" is written in C++ with SDL.
+The small "engine" is written in C++ with SDL (start reading [here](https://github.com/eliasdaler/sdl_breakout/blob/master/edge/src/Game.cpp)).
+
+The entire Lua/C++ bindings can be found [here](https://github.com/eliasdaler/sdl_breakout/blob/master/edge/src/LuaBindings.cpp)
 
 ![image](https://i.ibb.co/1LdJktH/gameplay-breakout.gif)
 
