@@ -12,4 +12,23 @@ I'll be continuing doing stuff with this new "engine", I'll probably release it'
 
 --
 
+## Building
+
+Stuff you'll need:
+
+* A C++20 compiler (but you can also downgrade to C++17, which sol2 still uses)
+* git
+* CMake 3.18+
+
+```sh
+git submodule update --init --recursive
+mkdir build
+cd build
+cmake .. # add -DBUILD_SHARED_LIBS=OFF to link statically
+cmake --build . --target breakout
+./games/breakout/breakout
+```
+
+---
+
 Font used:  "Press Start 2P", Designed by CodeMan38 (licensed under the Open Font License)
