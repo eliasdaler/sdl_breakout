@@ -140,10 +140,6 @@ void registerFont(sol::state& lua, sol::table& edge)
 /////////////////////
 
 struct DrawableString {
-    DrawableString(SDL_Texture* texture, int width, int height) :
-        texture(texture), width(width), height(height)
-    {}
-
     // _gc
     void destroy()
     {
@@ -194,8 +190,6 @@ void registerDrawableString(sol::state& lua, sol::table& edge)
 /////////////////////
 
 struct Sound {
-    Sound(Mix_Chunk* s) : sound(s) {}
-
     // _gc
     void destroy()
     {
@@ -236,8 +230,6 @@ void registerSound(sol::state& lua, sol::table& edge)
 /////////////////////
 
 struct Music {
-    Music(Mix_Music* m) : music(m) {}
-
     // _gc
     void destroy()
     {
