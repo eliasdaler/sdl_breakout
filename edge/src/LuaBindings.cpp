@@ -29,19 +29,19 @@ struct Texture {
     int height = 0;
 };
 
-std::tuple<sol::object, const char*> loadTexture(const char* path, sol::this_state s)
+std::pair<sol::object, const char*> loadTexture(const char* path, sol::this_state s)
 {
     sol::state_view lua(s);
 
     SDL_Surface* loadedSurface = IMG_Load(path);
     if (!loadedSurface) {
-        return std::make_tuple(sol::nil, SDL_GetError());
+        return std::make_pair(sol::nil, SDL_GetError());
     }
 
     SDL_Texture* texture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
     if (!texture) {
         SDL_FreeSurface(loadedSurface);
-        return std::make_tuple(sol::nil, SDL_GetError());
+        return std::make_pair(sol::nil, SDL_GetError());
     }
 
     sol::object luaTexture{lua, sol::in_place_type<Texture>,
@@ -49,7 +49,7 @@ std::tuple<sol::object, const char*> loadTexture(const char* path, sol::this_sta
                            texture, loadedSurface->w, loadedSurface->h};
     SDL_FreeSurface(loadedSurface);
 
-    return std::make_tuple(luaTexture, nullptr);
+    return std::make_pair(luaTexture, nullptr);
 }
 
 void registerTexture(sol::state& lua, sol::table& edge)
@@ -117,14 +117,14 @@ struct Font {
     TTF_Font* font = nullptr;
 };
 
-std::tuple<sol::object, const char*> loadFont(const char* path, int size, sol::this_state s)
+std::pair<sol::object, const char*> loadFont(const char* path, int size, sol::this_state s)
 {
     sol::state_view lua(s);
     TTF_Font* font = TTF_OpenFont(path, size);
     if (!font) {
-        return std::make_tuple(sol::nil, SDL_GetError());
+        return std::make_pair(sol::nil, SDL_GetError());
     }
-    return std::make_tuple(sol::object(lua, sol::in_place_type<Font>, font), nullptr);
+    return std::make_pair(sol::object(lua, sol::in_place_type<Font>, font), nullptr);
 }
 
 void registerFont(sol::state& lua, sol::table& edge)
@@ -206,14 +206,14 @@ struct Sound {
     Mix_Chunk* sound = nullptr;
 };
 
-std::tuple<sol::object, const char*> loadSound(const char* path, sol::this_state s)
+std::pair<sol::object, const char*> loadSound(const char* path, sol::this_state s)
 {
     sol::state_view lua(s);
     Mix_Chunk* sound = Mix_LoadWAV(path);
     if (!sound) {
-        return std::make_tuple(sol::nil, SDL_GetError());
+        return std::make_pair(sol::nil, SDL_GetError());
     }
-    return std::make_tuple(sol::object(lua, sol::in_place_type<Sound>, sound), nullptr);
+    return std::make_pair(sol::object(lua, sol::in_place_type<Sound>, sound), nullptr);
 }
 
 void registerSound(sol::state& lua, sol::table& edge)
@@ -251,14 +251,14 @@ struct Music {
     Mix_Music* music = nullptr;
 };
 
-std::tuple<sol::object, const char*> loadMusic(const char* path, sol::this_state s)
+std::pair<sol::object, const char*> loadMusic(const char* path, sol::this_state s)
 {
     sol::state_view lua(s);
     Mix_Music* music = Mix_LoadMUS(path);
     if (!music) {
-        return std::make_tuple(sol::nil, SDL_GetError());
+        return std::make_pair(sol::nil, SDL_GetError());
     }
-    return std::make_tuple(sol::object(lua, sol::in_place_type<Music>, music), nullptr);
+    return std::make_pair(sol::object(lua, sol::in_place_type<Music>, music), nullptr);
 }
 
 void registerMusic(sol::state& lua, sol::table& edge)
